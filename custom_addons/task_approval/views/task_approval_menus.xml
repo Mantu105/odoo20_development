@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_task_approval_root"
+              name="Task Approval"
+              web_icon="task_approval,static/description/icon.png"
+              sequence="10"/>
+
+    <menuitem id="menu_task_approval_tasks"
+              name="Tasks"
+              parent="menu_task_approval_root"
+              action="action_task_approval"
+              sequence="10"/>
+
+</odoo>

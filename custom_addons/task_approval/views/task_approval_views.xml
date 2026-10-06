@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================ -->
+    <!-- List view                                                        -->
+    <!-- ================================================================ -->
+    <record id="view_task_approval_list" model="ir.ui.view">
+        <field name="name">task.approval.list</field>
+        <field name="model">task.approval</field>
+        <field name="arch" type="xml">
+            <list string="Tasks" sample="1"
+                  decoration-muted="state == 'rejected'"
+                  decoration-bf="state == 'submitted'">
+                <field name="reference"/>
+                <field name="name"/>
+                <field name="assigned_to_id"/>
+                <field name="priority" widget="priority" optional="show"/>
+                <field name="due_date"/>
+                <field name="approver_id" optional="hide"/>
+                <field name="decision_date" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Form view                                                        -->
+    <!-- ================================================================ -->
+    <record id="view_task_approval_form" model="ir.ui.view">
+        <field name="name">task.approval.form</field>
+        <field name="model">task.approval</field>
+        <field name="arch" type="xml">
+            <form string="Task">
+                <header>
+                    <button name="action_submit" type="object" string="Submit"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary"
+                            invisible="state != 'submitted'"
+                            groups="task_approval.group_task_approval_manager"
+                            confirm="Approve this task?"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            class="btn-secondary"
+                            invisible="state != 'submitted'"
+                            groups="task_approval.group_task_approval_manager"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft"
+                            invisible="state not in ('submitted', 'rejected')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <!-- Read-only banner shown once a decision is final. -->
+                    <widget name="web_ribbon" title="Approved"
+                            bg_color="text-bg-success"
+                            invisible="state != 'approved'"/>
+                    <widget name="web_ribbon" title="Rejected"
+                            bg_color="text-bg-danger"
+                            invisible="state != 'rejected'"/>
+
+                    <div class="oe_title">
+                        <label for="name" string="Task Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Prepare Q3 report"
+                                   readonly="state != 'draft'"/>
+                        </h1>
+                        <span class="text-muted">
+                            <field name="reference" readonly="1"/>
+                        </span>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="assigned_to_id"
+                                   readonly="state != 'draft'"
+                                   options="{'no_create': True}"/>
+                            <field name="priority" widget="priority"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="due_date" readonly="state != 'draft'"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description"
+                                   placeholder="Describe what needs to be done..."
+                                   readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Decision" name="decision"
+                              invisible="state in ('draft', 'submitted')">
+                            <group>
+                                <field name="approver_id"/>
+                                <field name="decision_date"/>
+                                <field name="rejection_reason"
+                                       invisible="state != 'rejected'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Search view                                                      -->
+    <!-- ================================================================ -->
+    <record id="view_task_approval_search" model="ir.ui.view">
+        <field name="name">task.approval.search</field>
+        <field name="model">task.approval</field>
+        <field name="arch" type="xml">
+            <search string="Search Tasks">
+                <field name="name" string="Task"
+                       filter_domain="['|', ('name', 'ilike', self), ('reference', 'ilike', self)]"/>
+                <field name="assigned_to_id"/>
+                <field name="due_date"/>
+                <separator/>
+                <filter name="my_tasks" string="My Tasks"
+                        domain="[('assigned_to_id', '=', uid)]"/>
+                <filter name="overdue" string="Overdue"
+                        domain="[('due_date', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'not in', ('approved', 'rejected'))]"/>
+                <separator/>
+                <filter name="draft" string="Draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="submitted" string="Submitted"
+                        domain="[('state', '=', 'submitted')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('state', '=', 'approved')]"/>
+                <filter name="rejected" string="Rejected"
+                        domain="[('state', '=', 'rejected')]"/>
+                <group>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_assigned" string="Assigned To"
+                            context="{'group_by': 'assigned_to_id'}"/>
+                    <filter name="group_priority" string="Priority"
+                            context="{'group_by': 'priority'}"/>
+                    <filter name="group_due" string="Due Date"
+                            context="{'group_by': 'due_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Window action                                                    -->
+    <!-- ================================================================ -->
+    <record id="action_task_approval" model="ir.actions.act_window">
+        <field name="name">Tasks</field>
+        <field name="res_model">task.approval</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_task_approval_search"/>
+        <field name="context">{'search_default_my_tasks': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first task
+            </p>
+            <p>
+                Tasks follow a Draft → Submitted → Approved / Rejected
+                approval workflow.
+            </p>
+        </field>
+    </record>
+
+</odoo>

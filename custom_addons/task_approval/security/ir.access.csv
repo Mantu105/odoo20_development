@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_task_approval_employee,Task Approval: employee own tasks,task.approval,group_task_approval_employee,crud,"['|', ('assigned_to_id', '=', user.id), ('create_uid', '=', user.id)]"
+access_task_approval_manager,Task Approval: manager all tasks,task.approval,group_task_approval_manager,crud,
+access_task_reject_wizard_employee,task.reject.wizard.employee,task.reject.wizard,group_task_approval_employee,crud,
+access_task_reject_wizard_manager,task.reject.wizard.manager,task.reject.wizard,group_task_approval_manager,crud,

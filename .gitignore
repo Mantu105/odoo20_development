@@ -1,0 +1,9 @@
+# Python virtualenv
+env/
+
+# Odoo core source (clone separately: git clone -b 20.0 https://github.com/odoo/odoo.git odoo)
+odoo/
+
+__pycache__/
+*.py[cod]
+*.log
